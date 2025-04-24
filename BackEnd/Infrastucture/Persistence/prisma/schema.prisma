@@ -1,0 +1,59 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db { 
+    provider = "postgresql"
+    url = env("DATABASE_URL")
+}
+
+model Usuario {
+  id          String    @id @default(uuid())
+  nombre      String
+  email       String    @unique
+  password    String
+  roleId      String
+  role        Role      @relation(fields: [roleId], references: [id])
+  comercioId  String?
+  comercio    Comercio? @relation(fields: [comercioId], references: [id])
+  creadoPorId String?
+  creadoPor   Usuario?  @relation("CreadoPor", fields: [creadoPorId], references: [id])
+  empleados   Usuario[] @relation("CreadoPor")
+  activaciones ComercioModulo[] @relation("activadoPor")
+  creadoEn    DateTime  @default(now())
+}
+
+model Role {
+  id       String    @id @default(uuid())
+  nombre   String    @unique
+  usuarios Usuario[]
+}
+
+model Comercio {
+  id          String            @id @default(uuid())
+  nombre      String
+  direccion   String
+  creadoEn    DateTime          @default(now())
+  usuarios    Usuario[]
+  modulos     ComercioModulo[]
+}
+
+model Modulo {
+  id            String            @id @default(uuid())
+  nombre        String            @unique
+  descripción   String            @default("Sin descripción")
+  clave         String            @unique // ej: 'inventario', 'soporte'
+  comercios     ComercioModulo[]
+}
+
+model ComercioModulo {
+  id         String    @id @default(uuid())
+  comercio   Comercio  @relation(fields: [comercioId], references: [id])
+  comercioId String
+  modulo     Modulo    @relation(fields: [moduloId], references: [id])
+  moduloId   String
+  habilitado Boolean   @default(true)
+  activadoPorId String?
+  activadoPor   Usuario?  @relation("activadoPor", fields: [activadoPorId], references: [id])
+  activadoEn DateTime  @default(now())
+}
